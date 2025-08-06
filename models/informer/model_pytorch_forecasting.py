@@ -138,23 +138,27 @@ class InformerPTForecasting(BaseModelWithCovariates):
 
         decoder_length = x['decoder_lengths'].max()
 
-        enc_out =\
-            self.enc_real_embeddings(x['encoder_cont']) +\
-            self.enc_positional_embeddings(x['encoder_cont']) +\
-            functools.reduce(operator.add, [emb for emb in self.cat_embeddings(
-                x['encoder_cat']).values()])
+        cat_embeddings = [emb for emb in self.cat_embeddings(x['encoder_cat']).values()]
+        enc_out = (
+            self.enc_real_embeddings(x['encoder_cont']) +
+            self.enc_positional_embeddings(x['encoder_cont'])
+        )
+        if cat_embeddings:
+            enc_out = enc_out + functools.reduce(operator.add, cat_embeddings)
             
         enc_out, attentions = self.encoder(enc_out)
 
         # Hacky solution to get only known reals,
         # they are always stacked first.
         # TODO: Make sure no unknown reals are passed to decoder.
-        dec_out =\
+        cat_embeddings_dec = [emb for emb in self.cat_embeddings(x['decoder_cat']).values()]
+        dec_out = (
             self.dec_real_embeddings(x['decoder_cont'][..., :len(
-                self.hparams.time_varying_reals_decoder)]) +\
-            self.dec_positional_embeddings(x['decoder_cont']) +\
-            functools.reduce(operator.add, [emb for emb in self.cat_embeddings(
-                x['decoder_cat']).values()])
+                self.hparams.time_varying_reals_decoder)]) +
+            self.dec_positional_embeddings(x['decoder_cont'])
+        )
+        if cat_embeddings_dec:
+            dec_out = dec_out + functools.reduce(operator.add, cat_embeddings_dec)
         dec_out = self.decoder(dec_out, enc_out)
 
         output = self.projection(dec_out)
