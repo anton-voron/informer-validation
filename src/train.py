@@ -22,6 +22,7 @@ from lightning.pytorch.callbacks.early_stopping import EarlyStopping
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import CSVLogger
 from pytorch_forecasting.data.timeseries import TimeSeriesDataSet
+from torchmetrics import MeanAbsoluteError, MeanSquaredError, R2Score
 
 
 
@@ -114,9 +115,63 @@ def train(cfg : DictConfig) -> None:
     logging.info("Training complete.")
     logging.info(f"Best model saved at: {checkpoint_callback.best_model_path}")
     logging.info(f"Best model score: {checkpoint_callback.best_model_score}")
+    
+    # Test evaluation on the full test dataset
+    logging.info("Starting test evaluation...")
+    
+    # Load the best model for testing
+    if checkpoint_callback.best_model_path:
+        best_model = model.__class__.load_from_checkpoint(
+            checkpoint_callback.best_model_path,
+            loss=loss
+        )
+        logging.info(f"Loaded best model from: {checkpoint_callback.best_model_path}")
+    else:
+        best_model = model
+        logging.info("Using final model for testing (no checkpoint found)")
+    
+    # Run test evaluation
+    test_results = trainer.test(
+        model=best_model,
+        dataloaders=test_dataset.to_dataloader(batch_size=batch_size, shuffle=False),
+        verbose=True
+    )
+    
+    logging.info("Test evaluation completed.")
+    
+    # Parse and display test results more clearly
+    if test_results and len(test_results) > 0:
+        test_metrics = test_results[0]
+        logging.info("=" * 50)
+        logging.info("TEST RESULTS SUMMARY:")
+        logging.info("=" * 50)
+        
+        # Extract and display key metrics
+        test_loss = test_metrics.get('test_loss', 'N/A')
+        test_mae = test_metrics.get('test_MAE', 'N/A')
+        test_rmse = test_metrics.get('test_RMSE', 'N/A')
+        
+        # Look for R2 score in different possible keys
+        test_r2 = None
+        for key, value in test_metrics.items():
+            if 'r2' in key.lower() or 'R2Score' in key or 'TorchMetricWrapper' in key:
+                test_r2 = value
+                break
+        
+        logging.info(f"Test Loss: {test_loss}")
+        logging.info(f"Test MAE (Mean Absolute Error): {test_mae}")
+        logging.info(f"Test RMSE (Root Mean Squared Error): {test_rmse}")
+        logging.info(f"Test R2 Score: {test_r2 if test_r2 is not None else 'N/A'}")
+        logging.info("=" * 50)
+    
+    logging.info(f"Full test results: {test_results}")
     logging.info(f"Training logs saved at: {logger.log_dir}")
     logging.info(f"Training configuration: \n{pprint.pformat(conf)}")
     logging.info("Training finished successfully.")
+    
+
+    
+    
 
 
 if __name__ == "__main__":
