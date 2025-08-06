@@ -10,18 +10,18 @@ from pytorch_forecasting.models.nn import MultiEmbedding
 from pytorch_forecasting.models.base_model import BaseModelWithCovariates
 from pytorch_forecasting.metrics import MAE, RMSE, QuantileLoss
 
-from informer.attention import (
+from .attention import (
     FullAttention, ProbSparseAttention, AttentionLayer)
-from informer.embedding import TokenEmbedding, PositionalEmbedding
-from informer.encoder import (
+from .embedding import TokenEmbedding, PositionalEmbedding
+from .encoder import (
     Encoder,
     EncoderLayer,
     SelfAttentionDistil,
 )
-from informer.decoder import Decoder, DecoderLayer
+from .decoder import Decoder, DecoderLayer
 
 
-class Informer(BaseModelWithCovariates):
+class InformerPTForecasting(BaseModelWithCovariates):
 
     def __init__(
             self,
@@ -78,8 +78,7 @@ class Informer(BaseModelWithCovariates):
             len(time_varying_reals_decoder), d_model)
         self.dec_positional_embeddings = PositionalEmbedding(d_model)
 
-        Attention = ProbSparseAttention \
-            if attention_type == "prob" else FullAttention
+        Attention = ProbSparseAttention if attention_type == "prob" else FullAttention
 
         self.encoder = Encoder(
             [
@@ -98,8 +97,7 @@ class Informer(BaseModelWithCovariates):
                 )
                 for _ in range(n_encoder_layers)
             ],
-            [SelfAttentionDistil(d_model) for _ in range(
-                n_encoder_layers - 1)] if distil else None,
+            [SelfAttentionDistil(d_model) for _ in range(n_encoder_layers - 1)] if distil else None,
             nn.LayerNorm(d_model),
         )
 
@@ -107,8 +105,7 @@ class Informer(BaseModelWithCovariates):
             [
                 DecoderLayer(
                     AttentionLayer(
-                        Attention(True, factor, attention_dropout=dropout,
-                                  output_attention=False),
+                        Attention(True, factor, attention_dropout=dropout, output_attention=False),
                         d_model,
                         n_attention_heads,
                         mix=mix_attention,
@@ -146,6 +143,7 @@ class Informer(BaseModelWithCovariates):
             self.enc_positional_embeddings(x['encoder_cont']) +\
             functools.reduce(operator.add, [emb for emb in self.cat_embeddings(
                 x['encoder_cat']).values()])
+            
         enc_out, attentions = self.encoder(enc_out)
 
         # Hacky solution to get only known reals,

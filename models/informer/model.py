@@ -1,13 +1,13 @@
 import torch.nn as nn
-from models.informer.attention import FullAttention, ProbSparseAttention, AttentionLayer
-from models.informer.embedding import DataEmbedding
-from models.informer.encoder import (
+from .attention import FullAttention, ProbSparseAttention, AttentionLayer
+from .embedding import DataEmbedding
+from .encoder import (
     Encoder,
     EncoderLayer,
     EncoderStack,
     SelfAttentionDistil,
 )
-from models.informer.decoder import Decoder, DecoderLayer
+from .decoder import Decoder, DecoderLayer
 
 
 class BaseInformer(nn.Module):

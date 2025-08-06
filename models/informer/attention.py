@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 import math
-from models.informer.masking import triangular_causal_mask, prob_mask
+from .masking import triangular_causal_mask, prob_mask
 
 
 class FullAttention(nn.Module):
