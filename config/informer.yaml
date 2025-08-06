@@ -2,7 +2,7 @@
 future_window: 2
 past_window: 28
 batch_size: 256
-max_epochs: 40
+max_epochs: 1
 
 model:
   name: Informer
@@ -13,20 +13,20 @@ model:
   n_encoder_layers: 1
   n_decoder_layers: 3
   learning_rate: 0.001
-  optimizer: "Adam"
+  optimizer: 'Adam'
 
 data:
-  path: /Users/apple/Desktop/time-series/informer-validation/data/btc_features_5min.csv
+  path: /teamspace/studios/this_studio/informer-validation/data/btc_features_5min.csv
   target: target
   time_index: time_index
   group_ids: group_ids
   static_real: []
   static_cat: []
-  dynamic_known_real: []
+  dynamic_known_real: ['fear_and_greed', 'vix', 'fed_rates', 'fed_rates', 'vol_1d', 'vol_7d']
   dynamic_known_cat: ['weekday', 'hour']
   dynamic_unknown_real: [
-    'open', 'high', 'low', 'close', 'volume', 'returns', 'fear_and_greed', 'vix', 'fed_rates', 'open_to_close', 'high_to_close', 
-    'low_to_close', 'vol_1h', 'vol_1d', 'vol_7d', 'sma_1h', 'sma_1d', 'sma_7d', 'ema_1h', 'ema_1d', 'ema_7d', 'macd', 'macd_signal', 
+    'open', 'high', 'low', 'close', 'volume', 'returns', 'open_to_close', 'high_to_close', 
+    'low_to_close', 'vol_1h', 'sma_1h', 'sma_1d', 'sma_7d', 'ema_1h', 'ema_1d', 'ema_7d', 'macd', 'macd_signal', 
     'rsi', 'bb_mid', 'bb_up', 'bb_low'
   ]
   dynamic_unknown_cat: []
@@ -39,7 +39,7 @@ loss:
 
 experiment:
   name: Informer_BTC_5min
-  log_dir: /Users/apple/Desktop/time-series/informer-validation/logs
+  log_dir: /teamspace/studios/this_studio/informer-validation/logs
   save_model: true
   early_stopping_patience: 10
   validation_interval: 1

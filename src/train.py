@@ -45,6 +45,9 @@ def train(cfg : DictConfig) -> None:
     df = pd.read_csv(conf['data']['path'])
     df['weekday'] = df['weekday'].astype(str)
     df['hour'] = df['hour'].astype(str)
+    
+    for col in ["group_ids", "weekday", "hour"]:
+        df[col] = df[col].astype("category")
 
     train_df, val_df = train_test_split(df, test_size=0.2, shuffle=False)
     val_df, test_df = train_test_split(val_df, test_size=0.5, shuffle=False)
@@ -61,8 +64,7 @@ def train(cfg : DictConfig) -> None:
 
     # Get model
     model = get_model(conf, train_dataset, loss)
-    logging.info(f"Using model {model}")
-    logging.info(f"Model hyperparameters: \n{pprint.pformat(model.hparams)}")
+    # logging.info(f"Model hyperparameters: \n{pprint.pformat(model.hparams)}")
     
     
     # Callbacks
@@ -89,8 +91,8 @@ def train(cfg : DictConfig) -> None:
         mode="min",
     )
     
-    batch_size = conf['data']['batch_size']
-    max_epochs = conf['experiment']['max_epochs']
+    batch_size = conf['batch_size']
+    max_epochs = conf['max_epochs']
     
     trainer = pl.Trainer(
         max_epochs=max_epochs,
