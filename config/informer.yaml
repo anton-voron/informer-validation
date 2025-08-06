@@ -1,8 +1,9 @@
 
-future_window: 1
+future_window: 2
 past_window: 28
 batch_size: 256
 max_epochs: 40
+min_epochs: 30
 
 model:
   name: Informer

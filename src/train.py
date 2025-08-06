@@ -94,8 +94,10 @@ def train(cfg : DictConfig) -> None:
     
     batch_size = conf['batch_size']
     max_epochs = conf['max_epochs']
+    min_epochs = conf.get('min_epochs', 1)
     
     trainer = pl.Trainer(
+        min_epochs=min_epochs,
         max_epochs=max_epochs,
         accelerator="auto",
         devices="auto",
