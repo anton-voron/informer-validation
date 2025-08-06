@@ -138,35 +138,7 @@ def train(cfg : DictConfig) -> None:
     )
     
     logging.info("Test evaluation completed.")
-    
-    # Parse and display test results more clearly
-    if test_results and len(test_results) > 0:
-        test_metrics = test_results[0]
-        logging.info("=" * 50)
-        logging.info("TEST RESULTS SUMMARY:")
-        logging.info("=" * 50)
-        
-        # Extract and display key metrics
-        test_loss = test_metrics.get('test_loss', 'N/A')
-        test_mae = test_metrics.get('test_MAE', 'N/A')
-        test_rmse = test_metrics.get('test_RMSE', 'N/A')
-        
-        # Look for R2 score in different possible keys
-        test_r2 = None
-        for key, value in test_metrics.items():
-            if 'r2' in key.lower() or 'R2Score' in key or 'TorchMetricWrapper' in key:
-                test_r2 = value
-                break
-        
-        logging.info(f"Test Loss: {test_loss}")
-        logging.info(f"Test MAE (Mean Absolute Error): {test_mae}")
-        logging.info(f"Test RMSE (Root Mean Squared Error): {test_rmse}")
-        logging.info(f"Test R2 Score: {test_r2 if test_r2 is not None else 'N/A'}")
-        logging.info("=" * 50)
-    
-    logging.info(f"Full test results: {test_results}")
     logging.info(f"Training logs saved at: {logger.log_dir}")
-    logging.info(f"Training configuration: \n{pprint.pformat(conf)}")
     logging.info("Training finished successfully.")
     
 
