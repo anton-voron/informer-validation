@@ -1,0 +1,47 @@
+
+future_window: 2
+past_window: 28
+batch_size: 256
+max_epochs: 10
+min_epochs: 4
+
+model:
+  name: Informer
+  d_model: 256
+  d_fully_connected: 256
+  n_attention_heads: 2
+  dropout: 0.01
+  n_encoder_layers: 1
+  n_decoder_layers: 3
+  learning_rate: 0.0001
+  optimizer: 'Adam'
+
+data:
+  path: /teamspace/studios/this_studio/informer-validation/data/btcusdt_5min_features.csv
+  target: close
+  time_index: time_index
+  group_ids: group_id
+  static_real: []
+  static_cat: []
+  dynamic_known_real: ['fed_funds_rate', 'vix_value', 'fng_value', 'vol_1d', 'vol_7d']
+  dynamic_known_cat: ['weekday', 'hour']
+  dynamic_unknown_real: [
+    'high', 'low', 'open', 'close', 'volume', 'open_to_close', 'high_to_close', 
+    'low_to_close', 'high_to_low_price', 'returns', 'log_returns', 'vol_1h', 'macd', 'macd_signal', 'rsi', 
+    'low_bband_to_close', 'up_bband_to_close', 'mid_bband_to_close', 'sma_1h_to_close', 
+    'sma_1d_to_close', 'sma_7d_to_close', 'ema_1h_to_close', 'ema_1d_to_close',
+  ]
+  dynamic_unknown_cat: []
+
+loss:
+  name: R2Loss
+
+
+experiment:
+  name: Informer_BTC_5min
+  log_dir: /teamspace/studios/this_studio/informer-validation/logs
+  save_model: true
+  early_stopping_patience: 10
+  validation_interval: 1
+  log_interval: 10
+  seed: 42

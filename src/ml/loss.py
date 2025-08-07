@@ -19,6 +19,9 @@ def get_loss(config):
     
     if loss_name == 'RMSE':
         return RMSE()
+    
+    if loss_name == 'R2Loss':
+        return R2Loss()
 
     raise ValueError("Unknown loss")
 
@@ -68,4 +71,46 @@ class GMADL(MultiHorizonMetric):
         # return -1 * \
         #     (1 / (1 + torch.exp(-self.a * self.to_prediction(y_pred) * target)
         #           ) - 0.5) * torch.pow(torch.abs(target), self.b)
+
+
+class R2Loss(MultiHorizonMetric):
+    """
+    R2Loss (R-squared Loss)
+    
+    Converts R² coefficient of determination into a loss function.
+    Loss = 1 - R²
+    
+    R² = 1 - (SS_res / SS_tot)
+    where:
+    - SS_res = Σ(y_true - y_pred)²  (residual sum of squares)
+    - SS_tot = Σ(y_true - y_mean)²  (total sum of squares)
+    
+    Perfect predictions give R² = 1, so loss = 0
+    Random predictions give R² ≈ 0, so loss ≈ 1
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def loss(self, y_pred: Tensor, target: Tensor) -> Tensor:
+        # get the model's predictions in the same scale as target
+        y_hat = self.to_prediction(y_pred)
+        
+        # Calculate mean of target values
+        y_mean = torch.mean(target)
+        
+        # Calculate sum of squares
+        ss_res = torch.sum((target - y_hat) ** 2)  # residual sum of squares
+        ss_tot = torch.sum((target - y_mean) ** 2)  # total sum of squares
+        
+        # Calculate R²
+        # Add small epsilon to avoid division by zero
+        eps = 1e-8
+        r2 = 1 - (ss_res / (ss_tot + eps))
+        
+        # Convert R² to loss: loss = 1 - R²
+        # Clamp to ensure loss is non-negative
+        loss_tensor = torch.clamp(1 - r2, min=0.0)
+        
+        return loss_tensor
 
