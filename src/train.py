@@ -34,7 +34,7 @@ from ml.model import get_model
 
 
 
-@hydra.main(version_base=None, config_path="../config", config_name="informer")
+@hydra.main(version_base=None, config_path="../config", config_name="informer_original")
 def train(cfg : DictConfig) -> None:
     logging.basicConfig(level=logging.INFO)
     conf = OmegaConf.to_container(cfg, resolve=True)

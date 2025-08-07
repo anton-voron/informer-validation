@@ -27,9 +27,12 @@ class GMADL(MultiHorizonMetric):
     """
     GMADL (Generalized Mean Absolute Difference Loss)
 
-    loss = - (σ(a * ŷ * y) - 0.5) * |y|^b
+    loss = (0.5 - σ(a * ŷ * y)) * |y|^b
     where σ(z) = 1 / (1 + exp(−z)), a controls sigmoid steepness,
     and b controls the weighting by the magnitude of the target.
+    
+    This loss encourages predictions that have the same sign as the target.
+    When ŷ and y have the same sign, the loss decreases.
     """
 
     def __init__(self, a: float = 1000.0, b: float = 2.0, **kwargs):
@@ -56,8 +59,9 @@ class GMADL(MultiHorizonMetric):
         # magnitude-based weighting: |target|^b
         weight = torch.abs(target).pow(self.b)
 
-        # final loss: negative sign to turn into a minimization objective
-        loss_tensor = - sigmoid_term * weight
+        # final loss: convert to positive loss for minimization
+        # when predictions and targets have same sign, sigmoid_term > 0, so we want to minimize (1 - sigmoid_term)
+        loss_tensor = (0.5 - sigmoid_term) * weight
 
         return loss_tensor
         
