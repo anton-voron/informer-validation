@@ -60,3 +60,8 @@ class GMADL(MultiHorizonMetric):
         loss_tensor = - sigmoid_term * weight
 
         return loss_tensor
+        
+        # return -1 * \
+        #     (1 / (1 + torch.exp(-self.a * self.to_prediction(y_pred) * target)
+        #           ) - 0.5) * torch.pow(torch.abs(target), self.b)
+

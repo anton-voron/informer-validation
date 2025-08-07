@@ -13,22 +13,23 @@ model:
   dropout: 0.01
   n_encoder_layers: 1
   n_decoder_layers: 3
-  learning_rate: 0.001
+  learning_rate: 0.0001
   optimizer: 'Adam'
 
 data:
-  path: /teamspace/studios/this_studio/informer-validation/data/btc_features_5min.csv
-  target: target
+  path: /teamspace/studios/this_studio/informer-validation/data/btcusdt_5min_features.csv
+  target: returns
   time_index: time_index
-  group_ids: group_ids
+  group_ids: group_id
   static_real: []
   static_cat: []
-  dynamic_known_real: ['fear_and_greed', 'vix', 'fed_rates', 'fed_rates', 'vol_1d', 'vol_7d']
+  dynamic_known_real: ['fed_funds_rate', 'vix_value', 'fng_value', 'vol_1d', 'vol_7d']
   dynamic_known_cat: ['weekday', 'hour']
   dynamic_unknown_real: [
-    'open', 'high', 'low', 'close', 'volume', 'returns', 'open_to_close', 'high_to_close', 
-    'low_to_close', 'vol_1h', 'sma_1h', 'sma_1d', 'sma_7d', 'ema_1h', 'ema_1d', 'ema_7d', 'macd', 'macd_signal', 
-    'rsi', 'bb_mid', 'bb_up', 'bb_low'
+    'high', 'low', 'open', 'close', 'volume', 'open_to_close', 'high_to_close', 
+    'low_to_close', 'high_to_low_price', 'returns', 'log_returns', 'vol_1h', 'macd', 'macd_signal', 'rsi', 
+    'low_bband_to_close', 'up_bband_to_close', 'mid_bband_to_close', 'sma_1h_to_close', 
+    'sma_1d_to_close', 'sma_7d_to_close', 'ema_1h_to_close', 'ema_1d_to_close',
   ]
   dynamic_unknown_cat: []
 

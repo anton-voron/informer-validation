@@ -47,8 +47,8 @@ def train(cfg : DictConfig) -> None:
     df['weekday'] = df['weekday'].astype(str)
     df['hour'] = df['hour'].astype(str)
     
-    for col in ["group_ids", "weekday", "hour"]:
-        df[col] = df[col].astype("category")
+    # for col in ["group_id", "weekday", "hour"]:
+    #     df[col] = df[col].astype("category")
 
     train_df, val_df = train_test_split(df, test_size=0.2, shuffle=False)
     val_df, test_df = train_test_split(val_df, test_size=0.5, shuffle=False)
