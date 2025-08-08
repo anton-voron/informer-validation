@@ -1,9 +1,11 @@
 
 future_window: 2
 past_window: 28
-batch_size: 256
-max_epochs: 10
-min_epochs: 4
+# batch_size: 256
+batch_size: 512
+max_epochs: 5
+min_epochs: 2
+transform_target: false
 
 model:
   name: Informer
@@ -17,8 +19,8 @@ model:
   optimizer: 'Adam'
 
 data:
-  path: /teamspace/studios/this_studio/informer-validation/data/btcusdt_5min_features.csv
-  target: close
+  path: /teamspace/studios/this_studio/informer-validation/data/btcusdt_5min_features_v2.csv
+  target: target_ret_volnorm_h
   time_index: time_index
   group_ids: group_id
   static_real: []
@@ -26,16 +28,42 @@ data:
   dynamic_known_real: ['fed_funds_rate', 'vix_value', 'fng_value', 'vol_1d', 'vol_7d']
   dynamic_known_cat: ['weekday', 'hour']
   dynamic_unknown_real: [
-    'high', 'low', 'open', 'close', 'volume', 'open_to_close', 'high_to_close', 
+    # 'vol_1d', 'vol_7d',
+    'high', 'low', 'open', 'close',
+    'volume', 'open_to_close', 'high_to_close', 
     'low_to_close', 'high_to_low_price', 'returns', 'log_returns', 'vol_1h', 'macd', 'macd_signal', 'rsi', 
     'low_bband_to_close', 'up_bband_to_close', 'mid_bband_to_close', 'sma_1h_to_close', 
     'sma_1d_to_close', 'sma_7d_to_close', 'ema_1h_to_close', 'ema_1d_to_close',
+    # --- newly added engineered features ---
+    'roll_vol_1d',        # rolling std of returns (past-only)
+    'ret_volnorm',        # returns / roll_vol_1d
+    'y_mag',              # |returns|
+    'ret_wins'            # rolling winsorized returns
   ]
-  dynamic_unknown_cat: []
+  dynamic_unknown_cat: ['y_dir']  # sign(returns) ∈ {-1,0,1}
+
+# loss:
+#   name: R2Loss
+
+# loss:
+#   name: GMADL
+#   a: 1000.0
+#   b: 2
+
+# loss:
+#   name: RMSE
+
+# loss:
+#   name: VarianceNormalizedMSE
+#   eps: 1e-4
 
 loss:
-  name: R2Loss
-
+  name: GMADLHuberLoss
+  a: 20.0
+  b: 1.2
+  delta: 1.0
+  w_dir: 1.0
+  w_reg: 1.0
 
 experiment:
   name: Informer_BTC_5min
