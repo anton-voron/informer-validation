@@ -15,6 +15,7 @@ import os
 import pandas as pd
 from sklearn.model_selection import train_test_split
 import tempfile
+from sklearn.preprocessing import QuantileTransformer
 
 import torch
 import lightning.pytorch as pl
@@ -30,6 +31,22 @@ from torchmetrics import MeanAbsoluteError, MeanSquaredError, R2Score
 from ml.data import build_time_series_dataset
 from ml.loss import get_loss
 from ml.model import get_model
+
+
+import lightning.pytorch as pl
+from lightning.pytorch.callbacks import TQDMProgressBar
+
+# Add this custom progress bar class
+class MetricsProgressBar(TQDMProgressBar):
+    def get_metrics(self, trainer, pl_module):
+        # Get the default metrics
+        items = super().get_metrics(trainer, pl_module)
+        # Add logging metrics to the progress bar
+        if hasattr(pl_module, 'logged_metrics'):
+            for key, val in pl_module.logged_metrics.items():
+                if any(metric_name in key.lower() for metric_name in ['mae', 'rmse', 'r2score']):
+                    items[key] = f"{val:.4f}"
+        return items
 
 
 
@@ -54,9 +71,34 @@ def train(cfg : DictConfig) -> None:
     val_df, test_df = train_test_split(val_df, test_size=0.5, shuffle=False)
     logging.info(f"Train shape: {train_df.shape}, Validation shape: {val_df.shape}, Test shape: {test_df.shape}")
     
-    train_dataset: TimeSeriesDataSet = build_time_series_dataset(conf, train_df)
-    val_dataset: TimeSeriesDataSet = TimeSeriesDataSet.from_dataset(train_dataset, val_df, predict=False)
-    test_dataset: TimeSeriesDataSet = TimeSeriesDataSet.from_dataset(train_dataset, test_df, predict=False)
+    if conf.get('transform_target', False):
+        logging.info("Transforming target variable using QuantileTransformer...")
+        # Use QuantileTransformer to transform the target variable
+        qt = QuantileTransformer(output_distribution='normal', random_state=42)
+
+        # Fit on train data only
+        train_target_transformed = qt.fit_transform(train_df[[conf['data']['target']]])
+        train_df_transformed = train_df.copy()
+        train_df_transformed[conf['data']['target']] = train_target_transformed.flatten()
+
+        # Transform validation and test data
+        val_target_transformed = qt.transform(val_df[[conf['data']['target']]])
+        val_df_transformed = val_df.copy()
+        val_df_transformed[conf['data']['target']] = val_target_transformed.flatten()
+
+        test_target_transformed = qt.transform(test_df[[conf['data']['target']]])
+        test_df_transformed = test_df.copy()
+        test_df_transformed[conf['data']['target']] = test_target_transformed.flatten()
+        logging.info("Target transformation complete.")
+    
+        train_dataset: TimeSeriesDataSet = build_time_series_dataset(conf, train_df_transformed)
+        val_dataset: TimeSeriesDataSet = TimeSeriesDataSet.from_dataset(train_dataset, val_df_transformed, predict=False)
+        test_dataset: TimeSeriesDataSet = TimeSeriesDataSet.from_dataset(train_dataset, test_df_transformed, predict=False)
+    else:
+        logging.info("Using original target variable without transformation.")
+        train_dataset: TimeSeriesDataSet = build_time_series_dataset(conf, train_df)
+        val_dataset: TimeSeriesDataSet = TimeSeriesDataSet.from_dataset(train_dataset, val_df, predict=False)
+        test_dataset: TimeSeriesDataSet = TimeSeriesDataSet.from_dataset(train_dataset, test_df, predict=False)
     
     
     # Get loss
@@ -102,7 +144,7 @@ def train(cfg : DictConfig) -> None:
         accelerator="auto",
         devices="auto",
         logger=logger,
-        callbacks=[early_stopping, checkpoint_callback],
+        callbacks=[early_stopping, checkpoint_callback, MetricsProgressBar(refresh_rate=1)],
         log_every_n_steps=conf['experiment']['log_interval'],
         enable_progress_bar=True,
         enable_model_summary=True,
